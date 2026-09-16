@@ -5,7 +5,7 @@
 The clean-install layout has standard NVS at `0x9000`, PHY at `0xf000`, a 2 MiB
 factory app at `0x10000`, two 3 MiB OTA apps at `0x210000` and `0x510000`, and
 7 MiB of storage at `0x810000`. OTA metadata is at `0xf10000`; the 64 KiB
-`lathe_settings` partition at `0xf12000` stores grblHAL/UI/Wi-Fi settings.
+`settings` partition at `0xf12000` stores grblHAL/UI/Wi-Fi settings.
 Nothing auto-starts motion after boot.
 
 All boot-critical partitions are below 16 MiB. During implementation, an image

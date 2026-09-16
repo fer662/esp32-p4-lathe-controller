@@ -1,7 +1,7 @@
 # Clean USB installation
 
 Version 0.4.1 removes the previous product identity and uses the
-`lathe_settings` NVS partition. A full P4 flash erase and installation replaces
+`settings` NVS partition. A full P4 flash erase and installation replaces
 the previous firmware, partition table and settings. No intermediate firmware
 is needed. Do not use an application-only OTA update for this transition.
 

@@ -24,7 +24,7 @@ The rename changes application symbols, component and task names, the default
 image identity and diagnostic protocol labels. The updated companion scripts
 match those labels. Version 0.4.1 removes the intermediate build option, legacy
 image-name acceptance and old uploader greetings. The settings partition is now
-`lathe_settings`. [INSTALL.md](INSTALL.md) describes a full USB erase/install,
+`settings`. [INSTALL.md](INSTALL.md) describes a full USB erase/install,
 which intentionally discards previous settings and makes the bridge unnecessary.
 
 Fresh dependency resolution required declaring three disabled optional LVGL 9

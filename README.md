@@ -57,7 +57,7 @@ the interface deliberately uses LVGL 8.3.11.
 
 Follow [INSTALL.md](INSTALL.md) for the one-time USB erase and full flash. It
 installs the new partition table, bootloader and application with the
-`lathe_settings` partition. No intermediate image is required. The previous
+`settings` partition. No intermediate image is required. The previous
 firmware and all saved settings, Wi-Fi credentials and coordinates are erased.
 
 After installation, [OTA.md](OTA.md) covers routine application updates, pairing
