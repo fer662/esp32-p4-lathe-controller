@@ -80,7 +80,7 @@ int main(void) {
   reset();stored_revision=revision;read_result=ESP_OK;settings.axis[0].acceleration=500*3600;
   lathe_storage_upgrade_motion();
   assert(settings.axis[0].acceleration==25*3600 && stored_revision==4);
-  assert(setter_calls==1+(revision<1)+(revision<2) && sync_calls==1 && writes==1);
+  assert(setter_calls==1U+(revision<1)+(revision<2) && sync_calls==1 && writes==1);
   assert(settings.axis[0].max_rate==(revision<2?300:60));
   assert(settings.axis[2].acceleration==(revision<1?100:50)*3600);
  }

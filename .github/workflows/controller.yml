@@ -32,7 +32,9 @@ jobs:
         shell: bash
         run: |
           . /opt/esp/idf/export.sh
+          python -m pip install -r requirements-build.txt
           idf.py ${{ matrix.options }} build
+          git diff --exit-code -- dependencies.lock
       - name: Real-widget preview and pointer regressions
         if: matrix.variant == 'controller'
         shell: bash

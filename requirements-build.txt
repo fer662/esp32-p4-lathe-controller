@@ -1,0 +1,2 @@
+# Keep clean dependency resolution consistent across local and CI SDK installs.
+idf-component-manager==2.4.6

@@ -33,6 +33,7 @@ Install ESP-IDF **5.5.2** with ESP32-P4 tools and source its `export.sh`.
 git clone https://github.com/fer662/esp32-p4-lathe-controller.git
 cd esp32-p4-lathe-controller
 git submodule update --init dependencies/esp32 dependencies/grbl dependencies/trinamic
+python -m pip install -r requirements-build.txt
 idf.py build
 ```
 
@@ -46,7 +47,8 @@ idf.py -B build-bench -DSDKCONFIG=sdkconfig.bench -DLATHE_BENCH_ONLY=ON -DLATHE_
 Application configuration is in `main/machine.h`; board wiring is selected through
 `waveshare_p4_xz_map.h` from the driver dependency. Driver and application C code
 compile with the same configuration header. Managed component versions are pinned
-in `dependencies.lock`. Keep the three LVGL 9 optional-backend switches disabled;
+in `dependencies.lock`; the component manager is pinned in `requirements-build.txt`
+to make fresh resolution reproducible. Keep the three LVGL 9 optional-backend switches disabled;
 the interface deliberately uses LVGL 8.3.11.
 
 ## Updating existing firmware

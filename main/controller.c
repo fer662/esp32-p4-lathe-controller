@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
+#include "esp_err.h"
 #include "p4_driver.h"
 #include "feedback.h"
 #include "grbl/protocol.h"
@@ -244,5 +245,5 @@ void lathe_controller_configure(void)
         .rx_overflows = lathe_serial_overflows,
         .storage_ready = lathe_storage_ready,
     };
-    configASSERT(p4_driver_configure(&hooks));
+    ESP_ERROR_CHECK(p4_driver_configure(&hooks) ? ESP_OK : ESP_ERR_INVALID_STATE);
 }

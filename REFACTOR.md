@@ -30,6 +30,13 @@ backend switches used by the display adapter's CMake checks. The UI remains on
 LVGL 8.3.11. Four diagnostic integer formats and an OTA status buffer size were
 corrected after enabling the normal compiler format checks. Strict-C11 Linux
 host builds also receive the standard pi constant when `math.h` omits `M_PI`.
+GCC host-test warnings are corrected without suppressing them. Hook registration
+is evaluated even when runtime assertions are disabled.
+
+The component manager is pinned to 2.4.6, as used by the successful fresh local
+configure. The official SDK image's bundled resolver replaced LVGL 8 with LVGL 9
+during its Kconfig retry; CI checks that the pinned resolver leaves the lock file
+unchanged.
 
 ## Checks
 

@@ -161,7 +161,8 @@ int main(void) {
  // A resumed cut at depth retains the existing stopped-index wait behavior.
  new_cycle(LATHE_THREAD);rpm=5;until_cut();begin_cut();thread_entry=false;queued[0]=0;
  status.completed_id=command_id;state=STATE_CYCLE;planner=index_wait=true;rpm=0;
- for(unsigned n=0;n<1000;n++)lathe_cycle_poll();assert(!rt && lathe_cycle_busy());
+ for(unsigned n=0;n<1000;n++) { lathe_cycle_poll(); }
+ assert(!rt && lathe_cycle_busy());
  // Explicit STOP still cancels an index wait and cannot auto-resume.
  lathe_cycle_cancel();lathe_cycle_poll();assert(rt&EXEC_STOP);reset_core();assert(!lathe_cycle_busy());
  // Stopping or reversing during entry reacquires with X clear, retaining pass.
