@@ -3,7 +3,7 @@
 All eight operations now have implementations. This document describes the
 Turn/Thread geometry and records its earlier validation. See [OPERATIONS.md](OPERATIONS.md)
 for Face, Cut, Ellipse, Gearbox, Cone, Async, parameter edits and the current
-operating limits. See [PORT_PROGRESS.md](docs/history/PORT_PROGRESS.md) for final regression status.
+operating limits. See [PORT_PROGRESS.md](https://github.com/fer662/esp32-p4-lathe-controller/tree/603e61b54246906d3ccc517cc3bed075a08f20d7/docs/history/PORT_PROGRESS.md) for final regression status.
 
 ## Change in 0.3.26: acquire phase with X clear
 
@@ -241,7 +241,7 @@ Each start's requested spindle phase includes that one-step displacement divided
 by lead. The prepared core profile still supplies acceleration phase compensation.
 Changing acceleration does not change the thread's reference to the entered start
 bound. Multiple starts retain individually rounded fractions of one revolution.
-See [spindle tracking](docs/history/SPINDLE_TRACKING.md) for backend behavior and earlier bench
+See [spindle tracking](https://github.com/fer662/esp32-p4-lathe-controller/tree/603e61b54246906d3ccc517cc3bed075a08f20d7/docs/history/SPINDLE_TRACKING.md) for backend behavior and earlier bench
 measurements; those measurements do not validate the new loaded acceleration.
 
 All profile cutting-axis approach, cutting and return targets remain within their
@@ -395,5 +395,5 @@ Installed application SHA-256:
 ## Remaining work
 
 Current coverage and outstanding checks are maintained in
-[PORT_PROGRESS.md](docs/history/PORT_PROGRESS.md). Physical encoder, wiring, drive and cutting
+[PORT_PROGRESS.md](https://github.com/fer662/esp32-p4-lathe-controller/tree/603e61b54246906d3ccc517cc3bed075a08f20d7/docs/history/PORT_PROGRESS.md). Physical encoder, wiring, drive and cutting
 validation remain mandatory before the enable lock can be removed.

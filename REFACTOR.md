@@ -1,4 +1,4 @@
-# 0.4.0 extraction and validation
+# Extraction and clean-install validation
 
 The source baseline is the integrated application at
 `37037c878cd1500a436f0e71d5a81f1fa3a899f1` (0.3.26). This repository starts a new
@@ -22,8 +22,10 @@ application history; upstream driver and core histories remain in their forks.
 
 The rename changes application symbols, component and task names, the default
 image identity and diagnostic protocol labels. The updated companion scripts
-match those labels. The OTA uploader alone also supports the old receiver;
-see [MIGRATION.md](MIGRATION.md) for the two-stage image-name transition.
+match those labels. Version 0.4.1 removes the intermediate build option, legacy
+image-name acceptance and old uploader greetings. The settings partition is now
+`lathe_settings`. [INSTALL.md](INSTALL.md) describes a full USB erase/install,
+which intentionally discards previous settings and makes the bridge unnecessary.
 
 Fresh dependency resolution required declaring three disabled optional LVGL 9
 backend switches used by the display adapter's CMake checks. The UI remains on
@@ -43,10 +45,11 @@ unchanged.
 - Host suites execute cancellation, cycle commands/lifecycle/preview, enable
   policy, jog routing, saved-state restoration, settings upgrades, OTA pairing,
   speed override, spindle wait, native threading/entry and work-zero behavior.
-- New compatibility assertions cover bounded image-name matching, unchanged
-  partition addresses and sizes, and old/new paired and LAN OTA greetings.
+- Identity assertions cover exact, bounded image-name matching, the new settings
+  partition label, and unchanged partition addresses and sizes. OTA socket tests
+  cover paired and LAN transfers, rejected authentication and corrupt images.
 - The actual LVGL widgets pass pointer-routing tests and render preview screens.
-- ESP-IDF 5.5.2 builds the normal controller, disconnected bench and upgrade bridge.
+- ESP-IDF 5.5.2 builds the normal controller and disconnected bench.
   CI repeats builds with the pristine official SDK. Local SDK installations are
   not treated as the reproducibility authority.
 - The shared driver has host tests for pulse/reset ordering, enable policy,
@@ -54,8 +57,8 @@ unchanged.
 
 No device was flashed or commanded during these checks. They do not establish
 connector pulse timing, physical stopping distance, loaded threading accuracy,
-or successful OTA migration on hardware. Historical bench records under
-`docs/history/` refer to earlier firmware, not this extracted build.
+or successful installation on hardware. Historical bench records remain in
+[the pre-cleanup revision](https://github.com/fer662/esp32-p4-lathe-controller/tree/603e61b54246906d3ccc517cc3bed075a08f20d7/docs/history) and refer to earlier firmware.
 
 Before publishing, source and documentation are checked for credentials, private
 paths/network identifiers and screenshot metadata/text. Build outputs, local

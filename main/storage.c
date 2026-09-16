@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include "storage.h"
-#include "compatibility.h"
+#include "identity.h"
 #include "bridge.h"
 #include "freertos/FreeRTOS.h"
 #include "critical.h"
@@ -91,7 +91,7 @@ bool lathe_storage_ready(void)
 }
 void lathe_storage_init(void)
 {
-    // A separate partition preserves every byte of the original firmware NVS.
+    // Keep controller settings separate from the default system NVS partition.
     // Never erase on an init error: report it and retain RAM-only operation.
     if (nvs_flash_init_partition(LATHE_SETTINGS_PARTITION) != ESP_OK ||
         nvs_open_from_partition(LATHE_SETTINGS_PARTITION, "controller", NVS_READWRITE, &handle) != ESP_OK)

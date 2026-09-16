@@ -13,7 +13,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from ota_upload import upload
 
 class PairingTest(unittest.TestCase):
-    def exchange(self,paired,*,missing=False,bad_auth=False,bad_digest=False,legacy=False):
+    def exchange(self,paired,*,missing=False,bad_auth=False,bad_digest=False):
         payload=bytes(range(256))*8
         key=bytes(range(16));nonce=bytes(range(32))
         failures=[];seen=[]
@@ -25,7 +25,7 @@ class PairingTest(unittest.TestCase):
                     try:
                         with listener.accept()[0] as peer:
                             peer.settimeout(3)
-                            prefix=b'H5OTA' if legacy else b'P4OTA'
+                            prefix=b'P4OTA'
                             peer.sendall(prefix+b'1 '+nonce.hex().encode()+b'\n' if paired else prefix+b'0\n')
                             if missing:
                                 self.assertEqual(peer.recv(1),b'');return
@@ -65,8 +65,6 @@ class PairingTest(unittest.TestCase):
                 self.assertFalse(worker.is_alive())
                 if failures:raise failures[0]
                 self.assertEqual(len(seen),0 if missing or bad_auth else 1)
-    def test_legacy_paired_protocol(self):self.exchange(True,legacy=True)
-    def test_legacy_lan_protocol(self):self.exchange(False,legacy=True)
     def test_existing_paired_protocol(self):self.exchange(True)
     def test_paired_requires_key_before_sending_image(self):self.exchange(True,missing=True)
     def test_paired_bad_auth(self):self.exchange(True,bad_auth=True)

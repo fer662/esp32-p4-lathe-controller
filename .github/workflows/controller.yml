@@ -22,8 +22,6 @@ jobs:
             options: ''
           - variant: bench
             options: '-DLATHE_BENCH_ONLY=ON -DLATHE_OTA_REQUIRE_PAIRING=ON'
-          - variant: upgrade-bridge
-            options: '-DLATHE_LEGACY_OTA_BRIDGE=ON'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,5 +47,8 @@ jobs:
           name: firmware-${{ matrix.variant }}
           path: |
             build/esp32-p4-lathe-controller.bin
-            build/h5_grblhal_p4.bin
+            build/bootloader/bootloader.bin
+            build/partition_table/partition-table.bin
+            build/ota_data_initial.bin
+            build/flash_args
           if-no-files-found: error

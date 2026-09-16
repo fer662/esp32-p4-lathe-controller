@@ -2,11 +2,11 @@
 
 ## Flash layout
 
-This port preserves the original lathe controller NVS (`0x9000`), PHY (`0xf000`) and 7 MiB
-storage partition (`0x810000`). Its former 8 MiB factory allocation is divided
-into a 2 MiB recovery/factory app at `0x10000` and two 3 MiB OTA apps at
-`0x210000` and `0x510000`. OTA metadata is at `0xf10000`; separate grblHAL/UI/Wi-Fi
-settings occupy 64 KiB at `0xf12000`. Nothing auto-starts motion after boot.
+The clean-install layout has standard NVS at `0x9000`, PHY at `0xf000`, a 2 MiB
+factory app at `0x10000`, two 3 MiB OTA apps at `0x210000` and `0x510000`, and
+7 MiB of storage at `0x810000`. OTA metadata is at `0xf10000`; the 64 KiB
+`lathe_settings` partition at `0xf12000` stores grblHAL/UI/Wi-Fi settings.
+Nothing auto-starts motion after boot.
 
 All boot-critical partitions are below 16 MiB. During implementation, an image
 written across that boundary matched USB flash readback exactly but failed the
@@ -17,13 +17,10 @@ This layout avoids enabling experimental 32-bit cache access.
 
 ## First installation
 
-Use ESP-IDF 5.5.2 and its Python environment. Save a full 32 MiB backup and
-`SHA256SUMS` outside Git. `migrate_partitions.py PORT --backup DIRECTORY` verifies
-that backup and the original layout, then installs the bootloader, partition
-table and factory application. The migration intentionally replaces the old lathe controller
-application; it preserves the original data partitions. Do not run it again on
-an already migrated device. Recovery to original lathe controller requires restoring the full
-backup, including the original table/bootloader, rather than just the app window.
+Follow [INSTALL.md](INSTALL.md) for the one-time full USB erase and flash of
+version 0.4.1. This discards the old firmware, partition table and settings.
+An application-only OTA update cannot install the new settings-partition label.
+Subsequent updates keep this layout and preserve saved data.
 
 ## Wi-Fi
 
@@ -62,7 +59,7 @@ on its touchscreen to a private local file:
 python ota_upload.py build/esp32-p4-lathe-controller.bin --host DEVICE_IP --key-file PRIVATE_KEY_FILE
 ```
 
-The uploader supports both modes and the original paired-only firmware. With
+The uploader supports both current paired and LAN modes. With
 USB attached it can still enter update mode and obtain pairing information:
 
 ```sh
@@ -104,9 +101,11 @@ The core's settings/coordinate blobs use its own CRC/versioned storage format.
 UI preferences have a separate version: operation, units/pitch display, pitch,
 step increment, passes, starts, cone ratio, infeed direction and sound. They
 save after two seconds without another preference change and only while idle.
-Current position, zero offsets, machining stops and an armed operation are not
-restored automatically after power loss: this machine has no absolute axis
-position feedback. Establish the position and bounds again before machining.
+Saved positions, work offsets, limits and disabled-axis state can be restored
+on ordinary boots, but a full flash erase deletes them. An armed operation does
+not resume after reboot. This machine has no absolute axis position feedback;
+verify physical position and bounds before machining, especially after a clean
+installation.
 
 `$P4STORE`, `$P4OTA`, `$P4AUDIO` and `$P4TMC` provide diagnostics. `$P4OTA` reveals
 a pairing key only through the local USB interface while update mode is active;
@@ -132,4 +131,4 @@ peripheral readiness; upload acceptance alone is not treated as successful boot.
 The touchscreen supplies the update IP and temporary pairing key. Live encoder,
 timing and TMC diagnostics use a separate read-only service so observation does
 not acquire update mode or stop operation. See
-[wireless commissioning](docs/history/WIRELESS_COMMISSIONING.md).
+[wireless commissioning](https://github.com/fer662/esp32-p4-lathe-controller/tree/603e61b54246906d3ccc517cc3bed075a08f20d7/docs/history/WIRELESS_COMMISSIONING.md).

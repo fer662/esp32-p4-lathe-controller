@@ -39,7 +39,7 @@ def upload(host,key,image,*,wrong_auth=False,truncate=False,bad_digest=False,por
         f=s.makefile('rb',buffering=0)
         greeting=f.readline().decode().strip()
         header=struct.pack('!I',len(data))+digest
-        paired=greeting.startswith(('P4OTA1 ', 'H5OTA1 '))
+        paired=greeting.startswith('P4OTA1 ')
         if paired:
             if key is None or len(key)!=16:
                 raise RuntimeError('This firmware requires a 32-character pairing key; use --key-file')
@@ -48,7 +48,7 @@ def upload(host,key,image,*,wrong_auth=False,truncate=False,bad_digest=False,por
             mac=hmac.digest(key,nonce+header,'sha256')
             if wrong_auth:mac=b'\0'*32
             header+=mac
-        elif greeting in ('P4OTA0', 'H5OTA0'):
+        elif greeting == 'P4OTA0':
             if wrong_auth:raise RuntimeError('Pairing is disabled on this firmware; no authentication test is applicable')
         else:raise RuntimeError(greeting)
         s.sendall(header)

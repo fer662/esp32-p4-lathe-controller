@@ -66,4 +66,4 @@ Final settled Z must agree with encoder position within 0.0031 mm (half a Z step
 plus reporting tolerance). Phase after reengagement is compared modulo one lead.
 Internal pulse counters must agree exactly with commanded GPIO steps and report
 no overlap/deadline faults. This does not establish loaded-machine accuracy or
-external STEP/DIR waveforms. See [PORT_PROGRESS.md](docs/history/PORT_PROGRESS.md) for results.
+external STEP/DIR waveforms. See [PORT_PROGRESS.md](https://github.com/fer662/esp32-p4-lathe-controller/tree/603e61b54246906d3ccc517cc3bed075a08f20d7/docs/history/PORT_PROGRESS.md) for results.

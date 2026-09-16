@@ -119,6 +119,6 @@ The last depth is retained. It never jumps out of a cut halfway through.
 `verify_follow.py` checks assisted-feed bounds, phase, stop/reverse and override;
 `verify_hand_follow.py` checks low-speed positions, reversals, bounds and G33 handoff;
 `verify_ui_operations.py` exercises operation buttons, manual gestures, parameter
-edits, pass advance and the OTA panel. Read [PORT_PROGRESS.md](docs/history/PORT_PROGRESS.md)
+edits, pass advance and the OTA panel. Read [PORT_PROGRESS.md](https://github.com/fer662/esp32-p4-lathe-controller/tree/603e61b54246906d3ccc517cc3bed075a08f20d7/docs/history/PORT_PROGRESS.md)
 for which suites passed on the final build. Internal PCNT counts and synthetic
 encoder phase cannot substitute for external waveform or loaded-machine checks.

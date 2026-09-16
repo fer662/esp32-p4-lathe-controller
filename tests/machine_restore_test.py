@@ -15,7 +15,7 @@ harness = r'''
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#define LATHE_SETTINGS_PARTITION "h5_settings"
+#define LATHE_SETTINGS_PARTITION "lathe_settings"
 #include "preferences.h"
 #define N_AXIS 3
 #define X_AXIS 0
