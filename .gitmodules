@@ -1,0 +1,9 @@
+[submodule "dependencies/esp32"]
+	path = dependencies/esp32
+	url = https://github.com/fer662/grblHAL-ESP32.git
+[submodule "dependencies/grbl"]
+	path = dependencies/grbl
+	url = https://github.com/fer662/grblHAL-core.git
+[submodule "dependencies/trinamic"]
+	path = dependencies/trinamic
+	url = https://github.com/terjeio/Trinamic-library.git

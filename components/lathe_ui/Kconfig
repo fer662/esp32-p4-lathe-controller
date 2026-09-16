@@ -1,0 +1,14 @@
+# LVGL 8 calls its PNG option LV_USE_PNG and has no libjpeg-turbo/LZ4 options.
+# The adapter's optional dependency rules also inspect LVGL 9 names. Define the
+# absent switches as disabled so a fresh IDF 5.5 dependency resolution succeeds.
+config LV_USE_LIBPNG
+    bool "LVGL 9 libpng backend (leave disabled with LVGL 8)"
+    default n
+
+config LV_USE_LIBJPEG_TURBO
+    bool "LVGL 9 libjpeg-turbo backend (leave disabled with LVGL 8)"
+    default n
+
+config LV_USE_LZ4
+    bool "LVGL 9 LZ4 backend (leave disabled with LVGL 8)"
+    default n

@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""Run the production profile state machine with a simulated command/motion owner."""
+from pathlib import Path
+import subprocess
+import tempfile
+root = Path(__file__).resolve().parents[1]
+source = (root / 'main/cycle.c').read_text()
+source = source[source.index('static portMUX_TYPE lock'):source.index('status_code_t lathe_cycle_command')]
+harness = r'''
+#include "bridge.h"
+#include "follow.h"
+#include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+typedef int portMUX_TYPE;
+#define portMUX_INITIALIZER_UNLOCKED 0
+enum {X_AXIS=0,Z_AXIS=2,STATE_IDLE=0,STATE_CYCLE=1,STATE_HOLD=2};
+enum {EXEC_MOTION_CANCEL=1,EXEC_STOP=2,CMD_RESET=24};
+enum {Status_GcodeSpindleNotRunning=99,Status_GcodeMaxFeedRateExceeded=100};
+static struct {bool abort,alarm;int32_t position[3];struct {bool execute_hold;} step_control;} sys;
+static struct {struct {bool scaling_active;} modal;} gc_state;
+static struct {struct {double steps_per_mm,max_rate,acceleration;} axis[3];} settings;
+static void discard(const char *s) {(void)s;}
+static struct {struct {void (*write)(const char *);} stream;} hal={{discard}};
+static unsigned state,rt,owner,submissions,phase_commands,plunges;
+static double rpm;
+static bool stepping,planner,index_wait,profile_mode,braking,entry_is_cutting;
+static void lathe_spindle_entry_prepare(void) {entry_is_cutting=false;}
+static bool lathe_spindle_entry_cutting(void) {return entry_is_cutting;}
+static lathe_status_t status;
+static char queued[128];
+static unsigned target_stage;
+static void lathe_critical_enter(int *l,int line) {(void)l;(void)line;}
+static void lathe_critical_exit(int *l) {(void)l;}
+static unsigned state_get(void) {return state;}
+static bool st_is_stepping(void) {return stepping;}
+static bool plan_get_current_block(void) {return planner;}
+bool lathe_follow_busy(void) {return false;}
+bool lathe_follow_selected(void) {return false;}
+void lathe_follow_clear(void) {}
+void lathe_follow_cancel(void) {}
+void lathe_follow_reset(void) {}
+void lathe_follow_poll(void) {}
+void lathe_follow_snapshot(lathe_cycle_status_t *s) {(void)s;}
+bool lathe_axis_change_pending(void) {return false;}
+bool lathe_operation_claim(unsigned o) {if(owner)return false;owner=o;return true;}
+void lathe_operation_release(unsigned o) {if(owner==o)owner=0;}
+static bool lathe_update_active(void) {return false;}
+static bool lathe_serial_pending(void) {return false;}
+bool lathe_bridge_empty(void) {return !queued[0];}
+void lathe_bridge_discard_cycle_commands(void) {queued[0]=0;}
+void lathe_bridge_snapshot(lathe_status_t *s) {*s=status;}
+static float lathe_spindle_rpm(void) {return rpm;}
+static float lathe_spindle_profile_rpm(void) {return rpm;}
+static void lathe_spindle_profile(bool on) {profile_mode=on;braking=false;}
+static bool lathe_spindle_waiting_index(void) {return index_wait;}
+static void lathe_spindle_follow_braking(void) {braking=true;}
+static void lathe_spindle_command(unsigned s,char *line) {(void)s;(void)line;}
+static void system_set_exec_state_flag(unsigned mask) {rt|=mask;}
+static void protocol_enqueue_realtime_command(unsigned c) {assert(c==CMD_RESET);rt|=4;}
+uint32_t lathe_bridge_cycle_submit(const char *line) {
+ assert(!queued[0]);if(!strcmp(line,"$P4THREADENTRY"))entry_is_cutting=false;
+ snprintf(queued,sizeof queued,"%s",line);return ++submissions;
+}
+SOURCE
+static void begin_cut(void) {
+ if(thread_entry && !entry_is_cutting) {
+  entry_is_cutting=true;plunges++;
+  sys.position[0]=lround(lathe_cycle_depth(&plan,pass)*1200);
+ }
+}
+static void complete(void) {
+ char axis;double value,x,z,feed;
+ assert(queued[0]);
+ if(stage==4)plunges++;
+ if(!strcmp(queued,"$P4THREADENTRY")) {
+  begin_cut();sys.position[2]=lround(plan.finish*200);
+ }
+ if(stage==5)phase_commands++;
+ if(sscanf(queued,"G90G94G53G0%c%lf",&axis,&value)==2 ||
+    sscanf(queued,"G90G95G53G1%c%lfF%lf",&axis,&value,&feed)==3) {
+  unsigned a=axis=='X'?0:2;sys.position[a]=lround(value*settings.axis[a].steps_per_mm);
+ }
+ if(sscanf(queued,"G90G95G53G1X%lfZ%lfF%lf",&x,&z,&feed)==3) {
+  sys.position[0]=lround(x*1200);sys.position[2]=lround(z*200);
+ }
+ if(sscanf(queued,"G91G33%c%lfK%lf",&axis,&value,&feed)==3) {
+  unsigned a=axis=='X'?0:2;sys.position[a]+=lround(value*settings.axis[a].steps_per_mm);
+ }
+ status.completed_id=command_id;status.command_status=0;queued[0]=0;
+ state=STATE_IDLE;stepping=planner=index_wait=false;
+}
+static void until_cut(void) {
+ for(unsigned n=0;n<1000;n++) {
+  lathe_cycle_poll();
+  if(stage==7 && queued[0])return;
+  if(queued[0])complete();
+ }
+ assert(!"Cut not submitted");
+}
+static void reset_core(void) {
+ assert(rt&(EXEC_STOP|4));
+ queued[0]=0;state=STATE_IDLE;stepping=planner=index_wait=false;
+ memset(&status,0,sizeof status);sys.abort=false;sys.step_control.execute_hold=false;rt=0;
+ lathe_cycle_reset();
+}
+static void interrupt_cut(double next_rpm,double x,double z,bool at_index) {
+ assert(stage==7 && queued[0]);if(!at_index)begin_cut();queued[0]=0;
+ status.completed_id=command_id;status.command_status=0;
+ sys.position[0]=lround(x*1200);sys.position[2]=lround(z*200);
+ state=STATE_CYCLE;stepping=!at_index;planner=true;index_wait=at_index;
+ rpm=next_rpm;lathe_cycle_poll();assert(pausing && (rt&EXEC_MOTION_CANCEL) && braking);
+ if(!at_index) {state=STATE_IDLE;stepping=planner=false;lathe_cycle_poll();}
+ reset_core();assert(lathe_cycle_busy() && recovering && stage==0 && owner==LATHE_OWNER_PROFILE);
+}
+static void new_cycle(unsigned op) {
+ lathe_cycle_cancel();internal_reset=false;lathe_cycle_reset();
+ queued[0]=0;memset(&status,0,sizeof status);memset(&sys,0,sizeof sys);
+ state=STATE_IDLE;stepping=planner=index_wait=false;submissions=plunges=phase_commands=rt=0;rpm=0;
+ settings.axis[0].steps_per_mm=1200;settings.axis[2].steps_per_mm=200;
+ settings.axis[0].max_rate=300;settings.axis[2].max_rate=960;
+ settings.axis[0].acceleration=500*3600;settings.axis[2].acceleration=100*3600;
+ lathe_cycle_config_t c={.operation=op,.aux_forward=true,.passes=2,.starts=1,.pitch=.1,
+  .x_min=0,.x_max=1,.z_min=0,.z_max=10,.rpm_limit=1};
+ assert(lathe_cycle_request(&c));
+}
+int main(void) {
+ (void)target_stage;
+ for(unsigned op=LATHE_TURN;op<=LATHE_ELLIPSE;op++) {
+  new_cycle(op);
+  // Thread waits clear; other profiles retain their existing plunge-first behavior.
+  for(unsigned n=0;n<100;n++) {lathe_cycle_poll();if(queued[0])complete();}
+  assert(lathe_cycle_busy() && stage==5 && !queued[0] && plunges==(op==LATHE_THREAD?0:1));
+  unsigned before=submissions;
+  for(unsigned n=0;n<10000;n++)lathe_cycle_poll();
+  assert(submissions==before && !rt);
+  rpm=5;until_cut();assert(lathe_cycle_busy() && profile_mode);
+  begin_cut();
+  double x=axis_position('X'),z=axis_position('Z');
+  if(op==LATHE_FACE || op==LATHE_CUT)x=.25;
+  else if(op==LATHE_ELLIPSE) {double feed;lathe_cycle_point(&plan,0,plan.segments/2,&x,&z,&feed);}
+  else z=5;
+  interrupt_cut(0,x,z,false);
+  for(unsigned n=0;n<20;n++) {lathe_cycle_poll();if(queued[0])complete();}
+  assert(stage==5 && !queued[0] && pass==0 && start==0 && plunges==1);
+  rpm=5;until_cut();assert(plunges==1); // no second plunge on resume
+  // Reverse while cutting: decelerate, keep depth and retrace toward start.
+  interrupt_cut(-5,x,z,false);until_cut();assert(reverse_cut && plunges==1);
+  if(op!=LATHE_ELLIPSE) {complete();lathe_cycle_poll();}
+  else for(unsigned n=0;n<1000 && stage!=5;n++) {if(queued[0])complete();lathe_cycle_poll();}
+  assert(stage==5 && lathe_cycle_busy() && pass==0 && plunges==1);
+  before=submissions;for(unsigned n=0;n<100;n++)lathe_cycle_poll();assert(submissions==before);
+  rpm=5;until_cut();assert(!reverse_cut && plunges==1);
+  // Speed well above the preview's legacy cap doesn't cancel the pass.
+  rpm=500;lathe_cycle_poll();assert(!pausing && !stopping && lathe_cycle_busy());
+  complete();
+  for(unsigned n=0;n<10000 && lathe_cycle_busy();n++) {lathe_cycle_poll();if(queued[0])complete();}
+  assert(!lathe_cycle_busy() && !owner && plunges==2);
+ }
+ // A resumed cut at depth retains the existing stopped-index wait behavior.
+ new_cycle(LATHE_THREAD);rpm=5;until_cut();begin_cut();thread_entry=false;queued[0]=0;
+ status.completed_id=command_id;state=STATE_CYCLE;planner=index_wait=true;rpm=0;
+ for(unsigned n=0;n<1000;n++)lathe_cycle_poll();assert(!rt && lathe_cycle_busy());
+ // Explicit STOP still cancels an index wait and cannot auto-resume.
+ lathe_cycle_cancel();lathe_cycle_poll();assert(rt&EXEC_STOP);reset_core();assert(!lathe_cycle_busy());
+ // Stopping or reversing during entry reacquires with X clear, retaining pass.
+ for(unsigned during=0;during<2;during++) {
+  new_cycle(LATHE_THREAD);rpm=100;until_cut();
+  queued[0]=0;status.completed_id=command_id;state=STATE_CYCLE;planner=true;
+  index_wait=!during;stepping=during;
+  if(during)sys.position[0]=0; // partially plunged, Z remains at the approach
+  rpm=0;lathe_cycle_poll();assert(pausing && restart_entry);
+  if(during) {state=STATE_IDLE;stepping=planner=false;lathe_cycle_poll();}
+  reset_core();
+  for(unsigned n=0;n<100;n++){lathe_cycle_poll();if(queued[0])complete();}
+  assert(stage==5 && pass==0 && start==0 && thread_entry && plunges==0);
+  assert(fabs(axis_position('X')-plan.clearance)<.001);
+  rpm=100;until_cut();assert(!strcmp(queued,"$P4THREADENTRY"));
+ }
+ // A stale completed-pass latch must not bypass the next queued entry.
+ new_cycle(LATHE_THREAD);entry_is_cutting=true;rpm=100;until_cut();
+ lathe_cycle_poll();assert(thread_entry && !entry_is_cutting);
+ // Actual axis-rate constraint keeps the operation armed instead of rejecting it.
+ new_cycle(LATHE_THREAD);rpm=20000;
+ for(unsigned n=0;n<100;n++) {lathe_cycle_poll();if(queued[0])complete();}
+ assert(stage==5 && lathe_cycle_busy() && !rt);rpm=5;until_cut();
+ // STOP wins over a pending automatic recovery.
+ interrupt_cut(0,axis_position('X'),5,false);lathe_cycle_cancel();lathe_cycle_poll();reset_core();
+ assert(!lathe_cycle_busy() && !owner);
+ // Reaching the cutting endpoint and stopping the spindle simultaneously
+ // must still run the programmed retract, rather than waiting at depth.
+ new_cycle(LATHE_THREAD);rpm=5;until_cut();complete();rpm=0;lathe_cycle_poll();
+ assert(stage==8 && queued[0] && !pausing);
+ puts("PASS: all profiles arm stopped, wait, resume, retrace, retain depth/pass, ignore legacy RPM caps; STOP cancels");
+}
+'''.replace('SOURCE', source)
+with tempfile.TemporaryDirectory() as directory:
+    path = Path(directory)
+    (path / 'test.c').write_text(harness)
+    subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-I', str(root / 'components/lathe_ui'),
+                    str(path / 'test.c'), str(root / 'components/lathe_ui/cycle_plan.c'), '-lm', '-o', str(path / 'test')], check=True)
+    subprocess.run([str(path / 'test')], check=True)

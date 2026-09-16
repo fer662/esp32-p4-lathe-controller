@@ -1,0 +1,6 @@
+# Application ISR callbacks must be accessible when flash cache is unavailable.
+# Core, pulse driver, feedback and math placement belongs to grblhal_p4.
+[mapping:lathe_motion]
+archive: libmain.a
+entries:
+    spindle (noflash)
