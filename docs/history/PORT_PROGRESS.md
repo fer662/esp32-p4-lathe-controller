@@ -20,7 +20,7 @@ Core changes are opt-in `SPINDLE_SYNC_PRELOAD` metadata, startup gating, exact-s
 junction and pre-established phase origin. Entry deceleration clamps tiny floating
 point endpoint residue to avoid a spurious near-zero-speed timing tail. The port
 validates both soft-limit targets before queuing either and retains disabled-axis
-checks for the internal entry command. See [threading](THREADING.md).
+checks for the internal entry command. See [threading](../../THREADING.md).
 
 Validation: production entry queue/phase/index code plus native planner/segment/
 step ISR simulation passed, including all depths at 50–500 RPM, hand-turn rates,
@@ -93,7 +93,7 @@ Validation: production geometry/emitter/preview, native planner/segment/ISR
 simulation of a single synchronized Z block (no X pulses), all depth passes,
 RPM changes, direction, multiple starts and cancellation; jog/disable/cancel
 regressions passed. The ESP32-P4 build and metric/inch LVGL preview renders passed.
-No OTA or on-machine motion sent. [Current Thread behavior](THREADING.md).
+No OTA or on-machine motion sent. [Current Thread behavior](../../THREADING.md).
 
 ## 0.3.22 stationary-Z air approach/retract (built; not installed)
 
@@ -158,7 +158,7 @@ and step ISR under a virtual clock/AddressSanitizer; 50–500 RPM, direction/dep
 internal and multistart cases, slow RPM ramps, cancellation, X speed, phase,
 pulse totals and endpoints. Existing host regressions and firmware build passed;
 LVGL preview rendered in both units. No attached-machine motion/OTA or loaded
-cut validation. Details in [CONTINUOUS_THREADING.md](CONTINUOUS_THREADING.md).
+cut validation. Details in [CONTINUOUS_THREADING.md](../../CONTINUOUS_THREADING.md).
 
 OTA uploaded on 2026-09-16 at the operator’s request. The updater reported
 `Firmware verified; device restarting.` Independent post-boot confirmation

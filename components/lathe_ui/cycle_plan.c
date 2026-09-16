@@ -3,6 +3,10 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+// ISO C does not require math.h to expose M_PI (e.g. strict C11 on Linux).
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 static bool fail(char *error, size_t size, const char *message)
 {
     snprintf(error, size, "%s", message);

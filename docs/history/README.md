@@ -17,7 +17,7 @@ no second index wait at depth. Phase timing includes X plunge duration and Z
 acceleration. X stays at 25 mm/s² and 5 mm/s maximum; thread endpoints are unchanged.
 Thread now waits clear when armed with the spindle off. An interrupted entry
 retracts/re-arms the same pass; an interrupted Z cut retains its existing resume
-behavior. See [threading and simulation limits](THREADING.md).
+behavior. See [threading and simulation limits](../../THREADING.md).
 
 **0.3.25 restores X acceleration to 25 mm/s² after stalls with the 500 mm/s² trial.**
 A one-time native settings migration replaces that trial value and preserves other
@@ -38,7 +38,7 @@ are saved/restored alongside native G54 offsets. See [operation semantics](../..
 native G33 Z pass and retracts after Z stops. The 10 mm example now reports
 9.995 mm at cutting depth (one Z step inside the start). Removed the moving-entry
 batch executor and geometry; native acceleration, bounds, phase, Rapids and X
-trial settings remain. See [current threading](THREADING.md). Earlier moving-entry
+trial settings remain. See [current threading](../../THREADING.md). Earlier moving-entry
 release notes below are historical and superseded.
 
 **0.3.22 moves the Thread air-clearance stroke with Z stationary.** X approaches
@@ -46,14 +46,14 @@ one step outside the configured starting-X surface before phase wait and Z
 run-up. It withdraws to there during the pass and completes the full clearance
 retract after Z stops. The same example now has 7.715 mm at full depth. The
 preview explicitly shows both X positions; this uses the entered X surface,
-not contact sensing. See [thread sequence](CONTINUOUS_THREADING.md).
+not contact sensing. See [thread sequence](../../CONTINUOUS_THREADING.md).
 
 **0.3.21 removes the extra Thread easing curve.** Entry and withdrawal now use
 acceleration / cruise / deceleration sized to each pass, preserving native axis
 limits and spindle phase. The preview reports final-pass stations. The example
 10 mm span now has 6.785 mm at full depth versus 4.355 in 0.3.20. This is still
 shorter than old H5's nominal 10 mm because old H5 stopped Z during entry and
-withdrawal. See [profile and old-firmware comparison](CONTINUOUS_THREADING.md).
+withdrawal. See [profile and old-firmware comparison](../../CONTINUOUS_THREADING.md).
 
 **0.3.20 adds a fourth STEP choice, Rapids, and raises X acceleration to
 500 mm/s² for testing.** Rapids always requires holding a direction and uses
@@ -67,7 +67,7 @@ withdraws X while Z keeps moving.** All 27 native motion blocks are queued befor
 one index wait; an opt-in core patch preserves phase across them. The preview
 shows programmed full-depth start/end and length. Real X speed/acceleration and
 Z bounds determine whether a setup fits. Normal X max rate is 300 mm/min;
-manual X jogging stays 60 mm/min and X acceleration stays 25 mm/s². See [continuous threading](CONTINUOUS_THREADING.md).
+manual X jogging stays 60 mm/min and X acceleration stays 25 mm/s². See [continuous threading](../../CONTINUOUS_THREADING.md).
 
 **0.3.18 reports actual Thread infeed/retract stations and cutting travel.**
 Removed the speculative usable-thread region and arbitrary settling margins.
@@ -136,7 +136,7 @@ are separated from each other and from limit controls; sliding off a jog require
 lifting before starting another direction. Position rows, cycle controls, menus
 and the number pad are larger. All eight operations retain their existing
 behavior. See [UI previews and proposed additions](UI_ROADMAP.md) and the
-[desktop pointer regression](tests/ui_preview/README.md).
+[desktop pointer regression](../../tests/ui_preview/README.md).
 
 **0.3.4 adds `H5_OTA_REQUIRE_PAIRING` (default OFF for this LAN).** Set it ON at
 build time to restore temporary-key authentication. Update mode, digest/image

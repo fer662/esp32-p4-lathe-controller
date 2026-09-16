@@ -28,7 +28,8 @@ see [MIGRATION.md](MIGRATION.md) for the two-stage image-name transition.
 Fresh dependency resolution required declaring three disabled optional LVGL 9
 backend switches used by the display adapter's CMake checks. The UI remains on
 LVGL 8.3.11. Four diagnostic integer formats and an OTA status buffer size were
-corrected after enabling the normal compiler format checks.
+corrected after enabling the normal compiler format checks. Strict-C11 Linux
+host builds also receive the standard pi constant when `math.h` omits `M_PI`.
 
 ## Checks
 
