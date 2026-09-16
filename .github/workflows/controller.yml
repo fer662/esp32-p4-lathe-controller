@@ -39,6 +39,7 @@ jobs:
         if: matrix.variant == 'controller'
         shell: bash
         run: |
+          . /opt/esp/idf/export.sh
           cmake -S tests/ui_preview -B build-ui-preview
           cmake --build build-ui-preview --target ui_preview -j 2
           cd build-ui-preview
